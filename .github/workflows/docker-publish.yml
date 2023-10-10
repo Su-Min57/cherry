@@ -1,0 +1,45 @@
+name: GitAction
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+on:
+  push:
+    branches: [ "main" ] #main branch에 push event가 발생하면
+  pull_request:
+    branches: [ "main" ] #main branch에 pr event가 발생하면
+
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
+
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set Up GO
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.15
+      - name: Build
+        run: go build -v ./...
+      - name: DockerHub Login
+        uses: docker/login-action@v1
+        with:
+          username: sumin57
+          password: dckr_pat_B7WYy41Dgzrv0ujUMM6uxa3rsH4
+      - name: build and release to DockerHub
+        env:
+          NAME: sumin57
+          REPO: cherry
+        run: |
+          docker build -t $REPO -f .
+          docker tag $REPO:latest $NAME/$REPO:latest
+          docker push $NAME/$REPO:latest
